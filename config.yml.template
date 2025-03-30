@@ -1,0 +1,12 @@
+---
+user: 
+region: 
+ratelimit: 
+eurocore_url: 
+eurocore_user: 
+eurocore_password: 
+targets:
+  - 
+telegram:
+  id: 
+  key: 

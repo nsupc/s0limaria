@@ -1,0 +1,9 @@
+github.com/nsupc/eurogo v0.0.0-20250329152034-a4a9ade17c1d h1:TKRC/QX6xaiAvDzOI4JtLtLBnsxeDlWx0lHMXswQVy0=
+github.com/nsupc/eurogo v0.0.0-20250329152034-a4a9ade17c1d/go.mod h1:QDo2KU/v4VCtHHFCnkYjtOhr78bJtGXSa1oURKth/ck=
+github.com/nsupc/eurogo v0.1.0 h1:ED8AqZlT0t9cgVVtWySWO5HeIZ6QON0m4c2a4yX+KT0=
+github.com/nsupc/eurogo v0.1.0/go.mod h1:QDo2KU/v4VCtHHFCnkYjtOhr78bJtGXSa1oURKth/ck=
+github.com/tmaxmax/go-sse v0.10.0 h1:j9F93WB4Hxt8wUf6oGffMm4dutALvUPoDDxfuDQOSqA=
+github.com/tmaxmax/go-sse v0.10.0/go.mod h1:u/2kZQR1tyngo1lKaNCj1mJmhXGZWS1Zs5yiSOD+Eg8=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=

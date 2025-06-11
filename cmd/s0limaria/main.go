@@ -51,6 +51,7 @@ func main() {
 	}
 
 	slog.SetDefault(logger)
+	slog.SetLogLoggerLevel(logLevel)
 
 	client := client.New(config.Eurocore.User, config.Eurocore.Password, config.Eurocore.Url)
 	sseClient := nsse.New()

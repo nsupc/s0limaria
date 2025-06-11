@@ -12,11 +12,6 @@ import (
 	"time"
 )
 
-type Nation struct {
-	Name                string `xml:"id,attr"`
-	RecruitmentEligible int    `xml:"TGCANRECRUIT"`
-}
-
 type Client struct {
 	client             http.Client
 	user               string
@@ -59,27 +54,59 @@ func (c *Client) acquire() error {
 	return nil
 }
 
-func (c *Client) RecruitmentEligible(name string, region string) (bool, error) {
+type RecruitmentStatus struct {
+	Name       string `xml:"id,attr"`
+	Region     string `xml:"region"`
+	CanRecruit bool
+}
+
+func (r *RecruitmentStatus) UnmarshalXML(data []byte) error {
+	type Aux struct {
+		Name       string `xml:"id,attr"`
+		Region     string `xml:"region"`
+		CanRecruit string `xml:"TGCANRECRUIT"`
+	}
+
+	aux := &Aux{}
+
+	if err := xml.Unmarshal(data, aux); err != nil {
+		return err
+	}
+
+	r.Name = aux.Name
+	r.Region = aux.Region
+	if aux.CanRecruit == "1" {
+		r.CanRecruit = true
+	} else {
+		r.CanRecruit = false
+	}
+
+	return nil
+}
+
+func (c *Client) RecruitmentEligible(name string, region string) (RecruitmentStatus, error) {
 	nationName := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(name)), " ", "_")
 	regionName := strings.ReplaceAll(strings.ToLower(strings.TrimSpace(region)), " ", "_")
 
-	url := fmt.Sprintf("https://www.nationstates.net/cgi-bin/api.cgi?nation=%s&q=tgcanrecruit&from=%s", nationName, regionName)
+	status := RecruitmentStatus{}
+
+	url := fmt.Sprintf("https://www.nationstates.net/cgi-bin/api.cgi?nation=%s&q=region+tgcanrecruit;from=%s", nationName, regionName)
 
 	err := c.acquire()
 	if err != nil {
-		return false, err
+		return status, err
 	}
 
 	req, err := http.NewRequest("GET", url, http.NoBody)
 	if err != nil {
-		return false, err
+		return status, err
 	}
 
 	req.Header.Add("User-Agent", c.user)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
-		return false, err
+		return status, err
 	}
 	defer resp.Body.Close()
 
@@ -116,21 +143,15 @@ func (c *Client) RecruitmentEligible(name string, region string) (bool, error) {
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return false, err
+		return status, err
 	}
 
-	nation := Nation{}
-
-	err = xml.Unmarshal(body, &nation)
+	err = xml.Unmarshal(body, &status)
 	if err != nil {
-		return false, err
+		return status, err
 	}
 
-	if nation.RecruitmentEligible == 1 {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return status, nil
 }
 
 func New(user string, maxRequests int) *Client {

@@ -63,6 +63,7 @@ func main() {
 
 				if _, exists := config.Get(regionName); exists {
 					nationName = matches[1]
+					slog.Info("move to target region", slog.String("nation", nationName))
 				}
 			}
 		}

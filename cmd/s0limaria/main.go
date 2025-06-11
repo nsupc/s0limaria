@@ -9,7 +9,6 @@ import (
 	"s0limaria/pkg/config"
 	"s0limaria/pkg/ns"
 	nsse "s0limaria/pkg/sse"
-	"slices"
 	"strconv"
 	"strings"
 
@@ -24,17 +23,17 @@ func main() {
 		log.Fatal(err)
 	}
 
-	client := client.New(config.EurocoreUser, config.EurocorePassword, config.EurocoreUrl)
+	client := client.New(config.Eurocore.User, config.Eurocore.Password, config.Eurocore.Url)
 	sseClient := nsse.New()
 	nsClient := ns.New(config.User, config.Ratelimit)
 
 	formatted := make([]string, len(config.Targets))
-	for i, region := range config.Targets {
-		formatted[i] = fmt.Sprintf("region:%s", region)
+	for i, target := range config.Targets {
+		formatted[i] = fmt.Sprintf("region:%s", target.Region)
 	}
 
 	waRegex := regexp.MustCompile(`^@@(.*)@@ was admitted to the World Assembly.?$`)
-	moveRegex := regexp.MustCompile(`^@@(.+)@@ relocated from %%%%.+%%%% to %%%%(.+)%%%%$`)
+	moveRegex := regexp.MustCompile(`^@@(.+)@@ relocated from %%%%.+%%%% to %%%%(.+)%%%%.?$`)
 
 	url := fmt.Sprintf("https://www.nationstates.net/api/%s", strings.Join(formatted, "+"))
 
@@ -47,52 +46,56 @@ func main() {
 			return
 		}
 
+		nationName := ""
+
 		matches := waRegex.FindStringSubmatch(event.Text)
 
 		if len(matches) > 0 {
-			nationName := matches[1]
+			nationName = matches[1]
 			slog.Info("admit in target region", slog.String("nation", nationName))
+		}
 
-			telegram := models.Telegram{
-				Recipient: nationName,
-				Sender:    config.User,
-				Id:        strconv.Itoa(config.Telegram.Id),
-				Secret:    config.Telegram.Key,
-				Type:      "recruitment",
+		if nationName == "" {
+			matches = moveRegex.FindStringSubmatch(event.Text)
+
+			if len(matches) > 0 {
+				regionName := matches[2]
+
+				if _, exists := config.Get(regionName); exists {
+					nationName = matches[1]
+				}
 			}
+		}
 
-			go client.SendTelegram(telegram)
-
+		if nationName == "" {
 			return
 		}
 
-		matches = moveRegex.FindStringSubmatch(event.Text)
-
-		if len(matches) > 0 {
-			nationName := matches[1]
-			regionName := matches[2]
-
-			if slices.Contains(config.Targets, regionName) {
-				canRecruit, err := nsClient.RecruitmentEligible(nationName, regionName)
-				if err != nil {
-					slog.Error("unable to retrieve nation details", slog.Any("error", err))
-					return
-				}
-
-				if canRecruit {
-					telegram := models.Telegram{
-						Recipient: nationName,
-						Sender:    config.User,
-						Id:        strconv.Itoa(config.Telegram.Id),
-						Secret:    config.Telegram.Key,
-						Type:      "recruitment",
-					}
-
-					go client.SendTelegram(telegram)
-				}
-
-				return
-			}
+		nation, err := nsClient.RecruitmentEligible(nationName, config.Region)
+		if err != nil {
+			slog.Error("unable to retrieve nation details", slog.Any("error", err))
+			return
 		}
+
+		// we have already validated that target exists
+		target, _ := config.Get(nation.Region)
+
+		if nation.CanRecruit {
+			telegram := models.Telegram{
+				Recipient: nationName,
+				Sender:    config.User,
+				Id:        strconv.Itoa(target.Telegram.Id),
+				Secret:    target.Telegram.Key,
+				Type:      "recruitment",
+			}
+
+			go func() {
+				err = client.SendTelegram(telegram)
+				if err != nil {
+					slog.Error("unable to send telegram", slog.Any("error", err))
+				}
+			}()
+		}
+
 	})
 }

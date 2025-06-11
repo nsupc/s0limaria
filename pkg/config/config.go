@@ -4,6 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"os"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -24,6 +25,12 @@ type Target struct {
 	Telegram Telegram `yaml:"telegram"`
 }
 
+type Log struct {
+	Level    string `yaml:"level"`
+	Token    string `yaml:"token"`
+	Endpoint string `yaml:"endpoint"`
+}
+
 type Config struct {
 	User            string   `yaml:"user"`
 	Region          string   `yaml:"region"`
@@ -31,6 +38,7 @@ type Config struct {
 	Eurocore        Eurocore `yaml:"eurocore"`
 	Targets         []Target `yaml:"targets"`
 	DefaultTelegram Telegram `yaml:"default-telegram"`
+	Log             Log      `yaml:"log"`
 }
 
 func New(path string) (*Config, error) {
@@ -91,6 +99,8 @@ func (c *Config) validate() error {
 	if c.DefaultTelegram.Id == 0 || c.DefaultTelegram.Key == "" {
 		return errors.New("all default-telegram attributes are required")
 	}
+
+	c.Log.Level = strings.ToLower(c.Log.Level)
 
 	return nil
 }

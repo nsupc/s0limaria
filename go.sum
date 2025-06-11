@@ -2,8 +2,16 @@ github.com/nsupc/eurogo v0.0.0-20250329152034-a4a9ade17c1d h1:TKRC/QX6xaiAvDzOI4
 github.com/nsupc/eurogo v0.0.0-20250329152034-a4a9ade17c1d/go.mod h1:QDo2KU/v4VCtHHFCnkYjtOhr78bJtGXSa1oURKth/ck=
 github.com/nsupc/eurogo v0.1.0 h1:ED8AqZlT0t9cgVVtWySWO5HeIZ6QON0m4c2a4yX+KT0=
 github.com/nsupc/eurogo v0.1.0/go.mod h1:QDo2KU/v4VCtHHFCnkYjtOhr78bJtGXSa1oURKth/ck=
+github.com/samber/lo v1.47.0 h1:z7RynLwP5nbyRscyvcD043DWYoOcYRv3mV8lBeqOCLc=
+github.com/samber/lo v1.47.0/go.mod h1:RmDH9Ct32Qy3gduHQuKJ3gW1fMHAnE/fAzQuf6He5cU=
+github.com/samber/slog-betterstack v1.4.2 h1:jeJpO5oDFmySzL6bhv77rYsryIOA9CJfSAKhAJLBp/Q=
+github.com/samber/slog-betterstack v1.4.2/go.mod h1:zteu9ahPm7AqHP3j+cniJZaajEuRpS4bpRw554Z1MPM=
+github.com/samber/slog-common v0.18.1 h1:c0EipD/nVY9HG5shgm/XAs67mgpWDMF+MmtptdJNCkQ=
+github.com/samber/slog-common v0.18.1/go.mod h1:QNZiNGKakvrfbJ2YglQXLCZauzkI9xZBjOhWFKS3IKk=
 github.com/tmaxmax/go-sse v0.10.0 h1:j9F93WB4Hxt8wUf6oGffMm4dutALvUPoDDxfuDQOSqA=
 github.com/tmaxmax/go-sse v0.10.0/go.mod h1:u/2kZQR1tyngo1lKaNCj1mJmhXGZWS1Zs5yiSOD+Eg8=
+golang.org/x/text v0.16.0 h1:a94ExnEXNtEwYLGJSIUxnWoxoRz/ZcCsV63ROupILh4=
+golang.org/x/text v0.16.0/go.mod h1:GhwF1Be+LQoKShO3cGOHzqOgRrGaYc9AvblQOmPVHnI=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=

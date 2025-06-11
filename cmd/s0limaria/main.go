@@ -14,6 +14,7 @@ import (
 
 	"github.com/nsupc/eurogo/client"
 	"github.com/nsupc/eurogo/models"
+	slogbetterstack "github.com/samber/slog-betterstack"
 	"github.com/tmaxmax/go-sse"
 )
 
@@ -22,6 +23,34 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	var logger *slog.Logger
+	var logLevel slog.Level
+
+	switch config.Log.Level {
+	case "debug":
+		logLevel = slog.LevelDebug
+	case "info":
+		logLevel = slog.LevelInfo
+	case "warn":
+		logLevel = slog.LevelWarn
+	case "error":
+		logLevel = slog.LevelError
+	default:
+		logLevel = slog.LevelInfo
+	}
+
+	if config.Log.Token != "" && config.Log.Endpoint != "" {
+		logger = slog.New(slogbetterstack.Option{
+			Token:    config.Log.Token,
+			Endpoint: config.Log.Endpoint,
+			Level:    logLevel,
+		}.NewBetterstackHandler())
+	} else {
+		logger = slog.Default()
+	}
+
+	slog.SetDefault(logger)
 
 	client := client.New(config.Eurocore.User, config.Eurocore.Password, config.Eurocore.Url)
 	sseClient := nsse.New()
@@ -91,6 +120,7 @@ func main() {
 			}
 
 			go func() {
+				slog.Info("sending telegram", slog.String("recipient", telegram.Recipient))
 				err = client.SendTelegram(telegram)
 				if err != nil {
 					slog.Error("unable to send telegram", slog.Any("error", err))

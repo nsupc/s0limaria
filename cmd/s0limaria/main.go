@@ -127,7 +127,8 @@ func main() {
 					slog.Error("unable to send telegram", slog.Any("error", err))
 				}
 			}()
+		} else {
+			slog.Info("nation not eligible for recruitment")
 		}
-
 	})
 }

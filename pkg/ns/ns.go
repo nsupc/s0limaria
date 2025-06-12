@@ -55,31 +55,30 @@ func (c *Client) acquire() error {
 }
 
 type RecruitmentStatus struct {
-	Name       string `xml:"id,attr"`
-	Region     string `xml:"region"`
+	Name       string
+	Region     string
 	CanRecruit bool
 }
 
-func (r *RecruitmentStatus) UnmarshalXML(data []byte) error {
+func (r *RecruitmentStatus) UnmarshalXML(d *xml.Decoder, start xml.StartElement) error {
+	for _, attr := range start.Attr {
+		if attr.Name.Local == "id" {
+			r.Name = attr.Value
+		}
+	}
+
 	type Aux struct {
-		Name       string `xml:"id,attr"`
 		Region     string `xml:"region"`
 		CanRecruit string `xml:"TGCANRECRUIT"`
 	}
 
-	aux := &Aux{}
-
-	if err := xml.Unmarshal(data, aux); err != nil {
+	var aux Aux
+	if err := d.DecodeElement(&aux, &start); err != nil {
 		return err
 	}
 
-	r.Name = aux.Name
 	r.Region = aux.Region
-	if aux.CanRecruit == "1" {
-		r.CanRecruit = true
-	} else {
-		r.CanRecruit = false
-	}
+	r.CanRecruit = aux.CanRecruit == "1"
 
 	return nil
 }

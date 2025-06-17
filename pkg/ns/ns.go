@@ -77,7 +77,7 @@ func (r *RecruitmentStatus) UnmarshalXML(d *xml.Decoder, start xml.StartElement)
 		return err
 	}
 
-	r.Region = aux.Region
+	r.Region = strings.ToLower(strings.ReplaceAll(aux.Region, " ", "_"))
 	r.CanRecruit = aux.CanRecruit == "1"
 
 	return nil

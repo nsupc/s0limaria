@@ -68,7 +68,7 @@ func (r *RecruitmentStatus) UnmarshalXML(d *xml.Decoder, start xml.StartElement)
 	}
 
 	type Aux struct {
-		Region     string `xml:"region"`
+		Region     string `xml:"REGION"`
 		CanRecruit string `xml:"TGCANRECRUIT"`
 	}
 

@@ -96,3 +96,11 @@ release:
   #
   # Templates: allowed.
   skip_upload: false
+
+  archives:
+  - files:
+      - README.md
+      - config.yml.template
+
+binary_signs:
+  - {}

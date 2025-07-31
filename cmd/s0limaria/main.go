@@ -13,45 +13,15 @@ import (
 	"strings"
 
 	"github.com/nsupc/eurogo/client"
-	"github.com/nsupc/eurogo/models"
-	slogbetterstack "github.com/samber/slog-betterstack"
+	"github.com/nsupc/eurogo/telegrams"
 	"github.com/tmaxmax/go-sse"
 )
 
 func main() {
-	config, err := config.New("./config.yml")
+	config, err := config.New()
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	var logger *slog.Logger
-	var logLevel slog.Level
-
-	switch config.Log.Level {
-	case "debug":
-		logLevel = slog.LevelDebug
-	case "info":
-		logLevel = slog.LevelInfo
-	case "warn":
-		logLevel = slog.LevelWarn
-	case "error":
-		logLevel = slog.LevelError
-	default:
-		logLevel = slog.LevelInfo
-	}
-
-	if config.Log.Token != "" && config.Log.Endpoint != "" {
-		logger = slog.New(slogbetterstack.Option{
-			Token:    config.Log.Token,
-			Endpoint: config.Log.Endpoint,
-			Level:    logLevel,
-		}.NewBetterstackHandler())
-	} else {
-		logger = slog.Default()
-	}
-
-	slog.SetDefault(logger)
-	slog.SetLogLoggerLevel(logLevel)
 
 	client := client.New(config.Eurocore.User, config.Eurocore.Password, config.Eurocore.Url)
 	sseClient := nsse.New()
@@ -102,33 +72,37 @@ func main() {
 			return
 		}
 
-		nation, err := nsClient.RecruitmentEligible(nationName, config.Region)
-		if err != nil {
-			slog.Error("unable to retrieve nation details", slog.Any("error", err))
-			return
-		}
-
-		// we have already validated that target exists
-		target, _ := config.Get(nation.Region)
-
-		if nation.CanRecruit {
-			telegram := models.Telegram{
-				Recipient: nationName,
-				Sender:    config.User,
-				Id:        strconv.Itoa(target.Telegram.Id),
-				Secret:    target.Telegram.Key,
-				Type:      "recruitment",
+		go func() {
+			nation, err := nsClient.RecruitmentEligible(nationName, config.Region)
+			if err != nil {
+				slog.Error("unable to retrieve nation details", slog.Any("error", err))
+				return
 			}
 
-			go func() {
+			// we have already validated that target exists
+			target, _ := config.Get(nation.Region)
+
+			if nation.CanRecruit {
+				tmpl, err := client.GetTemplate(target.Template)
+				if err != nil {
+					slog.Error("unable to retrieve template", slog.Any("error", err))
+					return
+				}
+
+				telegram := telegrams.New(tmpl.Nation, nationName, strconv.Itoa(tmpl.Tgid), tmpl.Key, telegrams.Recruitment)
+
 				slog.Info("sending telegram", slog.String("recipient", telegram.Recipient))
 				err = client.SendTelegram(telegram)
 				if err != nil {
 					slog.Error("unable to send telegram", slog.Any("error", err))
+					return
 				}
-			}()
-		} else {
-			slog.Info("nation not eligible for recruitment")
-		}
+
+				slog.Info("telegram sent")
+			} else {
+				slog.Info("nation not eligible for recruitment")
+			}
+		}()
+
 	})
 }

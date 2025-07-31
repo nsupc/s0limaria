@@ -6,13 +6,9 @@ import (
 	"os"
 	"strings"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
+	slogbetterstack "github.com/samber/slog-betterstack"
 )
-
-type Telegram struct {
-	Id  int    `yaml:"id"`
-	Key string `yaml:"key"`
-}
 
 type Eurocore struct {
 	Url      string `yaml:"url"`
@@ -21,8 +17,8 @@ type Eurocore struct {
 }
 
 type Target struct {
-	Region   string   `yaml:"region"`
-	Telegram Telegram `yaml:"telegram"`
+	Region   string `yaml:"region"`
+	Template string `yaml:"template"`
 }
 
 type Log struct {
@@ -37,11 +33,19 @@ type Config struct {
 	Ratelimit       int      `yaml:"ratelimit"`
 	Eurocore        Eurocore `yaml:"eurocore"`
 	Targets         []Target `yaml:"targets"`
-	DefaultTelegram Telegram `yaml:"default-telegram"`
+	DefaultTemplate string   `yaml:"default-template"`
 	Log             Log      `yaml:"log"`
 }
 
-func New(path string) (*Config, error) {
+func New() (*Config, error) {
+	var path string
+
+	if len(os.Args) > 1 {
+		path = os.Args[1]
+	} else {
+		path = "config.yml"
+	}
+
 	file, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -60,8 +64,8 @@ func New(path string) (*Config, error) {
 	}
 
 	for idx, target := range config.Targets {
-		if target.Telegram.Id == 0 || target.Telegram.Key == "" {
-			config.Targets[idx].Telegram = config.DefaultTelegram
+		if target.Template == "" {
+			config.Targets[idx].Template = config.DefaultTemplate
 		}
 	}
 
@@ -96,13 +100,46 @@ func (c *Config) validate() error {
 		}
 	}
 
-	if c.DefaultTelegram.Id == 0 || c.DefaultTelegram.Key == "" {
-		return errors.New("all default-telegram attributes are required")
+	if c.DefaultTemplate == "" {
+		return errors.New("default-template is required")
 	}
 
 	c.Log.Level = strings.ToLower(c.Log.Level)
 
+	c.initLogger()
+
 	return nil
+}
+
+func (c *Config) initLogger() {
+	var logger *slog.Logger
+	var logLevel slog.Level
+
+	switch c.Log.Level {
+	case "debug":
+		logLevel = slog.LevelDebug
+	case "info":
+		logLevel = slog.LevelInfo
+	case "warn":
+		logLevel = slog.LevelWarn
+	case "error":
+		logLevel = slog.LevelError
+	default:
+		logLevel = slog.LevelInfo
+	}
+
+	if c.Log.Token != "" && c.Log.Endpoint != "" {
+		logger = slog.New(slogbetterstack.Option{
+			Token:    c.Log.Token,
+			Endpoint: c.Log.Endpoint,
+			Level:    logLevel,
+		}.NewBetterstackHandler())
+	} else {
+		logger = slog.Default()
+	}
+
+	slog.SetDefault(logger)
+	slog.SetLogLoggerLevel(logLevel)
 }
 
 func (c *Config) Get(region string) (Target, bool) {

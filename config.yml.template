@@ -1,12 +1,15 @@
 ---
-user: 
-region: 
-ratelimit: 
-eurocore_url: 
-eurocore_user: 
-eurocore_password: 
+user:
+region:
+ratelimit:
+eurocore:
+  url:
+  user:
+  password:
 targets:
   - 
-telegram:
-  id: 
-  key: 
+default-template:
+log:
+  level:
+  token:
+  endpoint:

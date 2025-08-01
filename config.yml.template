@@ -13,3 +13,4 @@ log:
   level:
   token:
   endpoint:
+heartbeat-url:

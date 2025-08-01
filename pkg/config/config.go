@@ -3,8 +3,10 @@ package config
 import (
 	"errors"
 	"log/slog"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/goccy/go-yaml"
 	slogbetterstack "github.com/samber/slog-betterstack"
@@ -35,6 +37,7 @@ type Config struct {
 	Targets         []Target `yaml:"targets"`
 	DefaultTemplate string   `yaml:"default-template"`
 	Log             Log      `yaml:"log"`
+	Heartbeat       string   `yaml:"heartbeat-url"`
 }
 
 func New() (*Config, error) {
@@ -107,6 +110,7 @@ func (c *Config) validate() error {
 	c.Log.Level = strings.ToLower(c.Log.Level)
 
 	c.initLogger()
+	c.startHeartbeat()
 
 	return nil
 }
@@ -150,4 +154,21 @@ func (c *Config) Get(region string) (Target, bool) {
 	}
 
 	return Target{}, false
+}
+
+func (c *Config) startHeartbeat() {
+	if c.Heartbeat == "" {
+		return
+	}
+
+	ticker := time.NewTicker(30 * time.Minute)
+
+	go func() {
+		for range ticker.C {
+			_, err := http.Get(c.Heartbeat)
+			if err != nil {
+				slog.Error("heartbeat failed", slog.Any("error", err))
+			}
+		}
+	}()
 }

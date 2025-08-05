@@ -10,6 +10,7 @@ require (
 )
 
 require (
+	github.com/avast/retry-go/v4 v4.6.1 // indirect
 	github.com/samber/lo v1.47.0 // indirect
 	github.com/samber/slog-common v0.18.1 // indirect
 	golang.org/x/text v0.16.0 // indirect

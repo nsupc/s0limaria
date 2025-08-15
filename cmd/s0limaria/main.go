@@ -1,20 +1,18 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"log/slog"
 	"regexp"
 	"s0limaria/pkg/config"
 	"s0limaria/pkg/ns"
-	nsse "s0limaria/pkg/sse"
+	"s0limaria/pkg/sse"
 	"strconv"
 	"strings"
 
 	"github.com/nsupc/eurogo/client"
 	"github.com/nsupc/eurogo/telegrams"
-	"github.com/tmaxmax/go-sse"
 )
 
 func main() {
@@ -24,7 +22,7 @@ func main() {
 	}
 
 	client := client.New(config.Eurocore.User, config.Eurocore.Password, config.Eurocore.Url)
-	sseClient := nsse.New()
+
 	nsClient := ns.New(config.User, config.Ratelimit)
 
 	formatted := make([]string, len(config.Targets))
@@ -37,18 +35,11 @@ func main() {
 
 	url := fmt.Sprintf("https://www.nationstates.net/api/%s", strings.Join(formatted, "+"))
 
-	sseClient.Subscribe(url, func(e sse.Event) {
-		event := nsse.Event{}
-
-		err := json.Unmarshal([]byte(e.Data), &event)
-		if err != nil {
-			slog.Error("unable to marshal event", slog.Any("error", err))
-			return
-		}
-
+	sseClient := sse.New(url)
+	sseClient.Subscribe(func(e sse.Event) {
 		nationName := ""
 
-		matches := waRegex.FindStringSubmatch(event.Text)
+		matches := waRegex.FindStringSubmatch(e.Text)
 
 		if len(matches) > 0 {
 			nationName = matches[1]
@@ -56,7 +47,7 @@ func main() {
 		}
 
 		if nationName == "" {
-			matches = moveRegex.FindStringSubmatch(event.Text)
+			matches = moveRegex.FindStringSubmatch(e.Text)
 
 			if len(matches) > 0 {
 				regionName := matches[2]
